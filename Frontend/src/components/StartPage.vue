@@ -1,9 +1,15 @@
 <template>
   <div :class="['start-page', isDarkMode ? 'dark' : 'light']">
+    <ErrorToast
+      v-if="errorMessage"
+      :title="errorTitle"
+      :message="errorMessage"
+      @close="errorMessage = ''"
+    />
     <header class="start-page-header">
       <h1>MacroScope</h1>
       <p>Get personalized insights and predictions based on key economic indicators.</p>
-      <button @click="toggleDarkMode" class="mode-toggle" style="margin: auto;">
+      <button @click="toggleDarkMode" class="mode-toggle" style="margin: auto">
         {{ isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode' }}
       </button>
     </header>
@@ -11,14 +17,24 @@
     <main class="auth-container">
       <section class="auth-box">
         <h2>{{ isRegistering ? 'Register' : 'Login' }}</h2>
-        <form @submit.prevent="isRegistering ? handleRegister : handleLogin">
+        <form @submit.prevent="isRegistering ? handleRegister() : handleLogin()">
           <div class="input-group">
             <label for="email">{{ isRegistering ? 'Email' : 'Email' }}</label>
-            <input v-model="email" type="email" id="email" required />
+            <input v-model="email" type="email" id="email" required @blur="validateEmail" />
           </div>
           <div class="input-group">
             <label for="password">{{ isRegistering ? 'Password' : 'Password' }}</label>
-            <input v-model="password" type="password" id="password" required />
+            <div class="password-wrapper">
+              <input
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                id="password"
+                required
+              />
+              <button type="button" class="toggle-password" @click="togglePasswordVisibility">
+                {{ showPassword ? 'Hide' : 'Show' }}
+              </button>
+            </div>
           </div>
           <button type="submit" class="auth-button">
             {{ isRegistering ? 'Register' : 'Login' }}
@@ -36,30 +52,113 @@
 </template>
 
 <script>
+import axios from 'axios'
+import ErrorToast from './ErrorToast.vue'
+
 export default {
   name: 'StartPage',
+  components: {
+    ErrorToast
+  },
   data() {
     return {
       isDarkMode: false,
       isRegistering: false,
       email: '',
-      password: ''
+      password: '',
+      showPassword: false,
+      errorMessage: '',
+      errorTitle: 'Error'
     }
   },
   methods: {
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode
+      const modeButton = document.querySelector('.mode-toggle')
+      if (this.isDarkMode) {
+        modeButton.style.backgroundColor = '#121212'
+        modeButton.style.color = '#ffffff'
+      } else {
+        modeButton.style.backgroundColor = '#f0f4f8'
+        modeButton.style.color = '#333333'
+      }
     },
     toggleAuthMode() {
       this.isRegistering = !this.isRegistering
     },
-    handleLogin() {
-      console.log('Login, ', this.email, this.password)
-      this.$router.push('/dashboard')
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword
     },
+    handleLogin() {
+      console.log('Login:', this.email, this.password)
+
+      const payload = {
+        email: this.email,
+        password: this.password
+      }
+
+      axios
+        .post('http://127.0.0.1:8080/auth/login/', payload)
+        .then((response) => {
+          console.log('Login response:', response.data)
+          if (response.data.success && response.data.is_active) {
+            this.$router.push('/dashboard')
+          } else if (!response.data.is_active) {
+            this.errorMessage =
+              'Your account is not activated. Please check your email to activate your account.'
+          } else {
+            this.errorMessage = response.data.message
+          }
+        })
+        .catch((error) => {
+          console.error('Error during login:', error)
+          if (error.response && error.response.status === 404) {
+            this.errorMessage = 'Account does not exist. Please register first.'
+          } else if (error.response && error.response.status === 401) {
+            this.errorMessage = 'Invalid email or password.'
+          } else if (error.response && error.response.status === 403) {
+            this.errorMessage = 'Your account is not activated. Please check your email.'
+          } else {
+            this.errorMessage = 'An error occurred while trying to log in. Please try again later.'
+          }
+        })
+    },
+
     handleRegister() {
-      console.log('Register ', this.email, this.password)
-      this.$router.push('/dashboard')
+      console.log('Registering with:', this.email, this.password)
+      const payload = {
+        email: this.email,
+        password: this.password
+      }
+      console.log(payload)
+
+      fetch('http://127.0.0.1:8080/auth/register/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            this.errorTitle = 'Success'
+            this.errorMessage = 'Please check your email to verify your account.'
+          } else {
+            this.errorMessage = 'Error: ' + data.message
+          }
+        })
+        .catch((error) => {
+          console.error('Error during registration:', error)
+          this.errorMessage = 'An error occurred while trying to register. Please try again later.'
+        })
+    },
+
+    validateEmail() {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailPattern.test(this.email)) {
+        this.errorMessage = 'Please enter a valid email address'
+      }
     }
   }
 }
@@ -98,11 +197,13 @@ export default {
   top: 10px;
   right: 10px;
   padding: 8px 12px;
-  background-color: transparent;
   border: 2px solid currentColor;
   border-radius: 5px;
   cursor: pointer;
   font-size: 0.9rem;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
 
 .auth-container {
@@ -143,6 +244,24 @@ export default {
   border-radius: 4px;
 }
 
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--link-color);
+  cursor: pointer;
+  font-size: 0.9rem;
+  outline: none;
+}
+
 .auth-button {
   width: 100%;
   padding: 10px;
@@ -179,7 +298,6 @@ export default {
   background-color: #f0f4f8;
   color: #333333;
 }
-
 .dark {
   --box-bg: #333333;
   --text-color: #ffffff;
