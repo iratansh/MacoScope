@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import StartPage from '@/components/StartPage.vue';
-// Add other components as needed
+import Dashboard from '@/components/DashboardPage.vue';
 
 const routes = [
   {
@@ -8,7 +8,11 @@ const routes = [
     name: 'StartPage',
     component: StartPage
   },
-  // Add more routes here
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: Dashboard
+  }
 ];
 
 const router = createRouter({
