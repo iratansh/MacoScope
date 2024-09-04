@@ -35,13 +35,13 @@ export default {
   },
   methods: {
     setChart(indicator) {
-      // Need to fetch bullshit data based on the selected indicator
+      // Need to fetch  data based on the selected indicator
       this.fetchChartData(indicator).then(data => {
         this.updateChart(data);
       });
     },
     async fetchChartData(indicator) {
-      // Fetch the bullshit data from API Django 
+      // Fetch the  data from API Django 
       const response = await axios.get(`http://127.0.0.1:8080/forecast/api/${indicator}`);
       console.log(response.data);
       return {
