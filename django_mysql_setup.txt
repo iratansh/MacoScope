@@ -1,0 +1,6 @@
+First start the develpoment server for django
+Add a new mysql database to settings.py
+Add the appropriate admin info to database settings in settings.py
+Create the database in mysql
+Give yourself admin permissions in mysql
+Done

@@ -1,0 +1,104 @@
+﻿"Job vacancies, payroll employees, and job vacancy rate by provinces and territories, monthly, unadjusted for seasonality 1 2 3"
+"Frequency: Monthly"
+"Table: 14-10-0371-01"
+"Release date: 2024-08-29"
+"Geography: Canada, Province or territory"
+""
+""
+
+"Geography","Statistics","February 2024","March 2024","April 2024","May 2024","June 2024"
+"Canada",,"Number",,,,
+,"Job vacancies 4","588,470A","595,090A","604,840A","596,895A","590,330A"
+,"Payroll employees 5 6","16,890,245A","16,913,170A","16,997,070A","17,082,290A","17,399,530A"
+,,"Percent",,,,
+,"Job vacancy rate 7","3.4A","3.4A","3.4A","3.4A","3.3A"
+"Newfoundland and Labrador",,"Number",,,,
+,"Job vacancies 4","4,420C","3,520C","5,695C","6,085D","7,300C"
+,"Payroll employees 5 6","199,135A","182,080A","184,035A","208,665A","202,755A"
+,,"Percent",,,,
+,"Job vacancy rate 7","2.2C","1.9C","3.0C","2.8D","3.5C"
+"Prince Edward Island",,"Number",,,,
+,"Job vacancies 4","1,270D","2,875C","2,085D","2,375D","3,850D"
+,"Payroll employees 5 6","64,380A","64,020A","64,080A","67,175A","73,635A"
+,,"Percent",,,,
+,"Job vacancy rate 7","1.9D","4.3C","3.2D","3.4D","5.0D"
+"Nova Scotia",,"Number",,,,
+,"Job vacancies 4","14,745B","15,340B","14,950B","17,330C","15,875B"
+,"Payroll employees 5 6","439,900A","422,030A","438,555A","456,955A","439,915A"
+,,"Percent",,,,
+,"Job vacancy rate 7","3.2B","3.5B","3.3B","3.7C","3.5B"
+"New Brunswick",,"Number",,,,
+,"Job vacancies 4","8,605B","10,035C","12,000B","9,575C","12,275B"
+,"Payroll employees 5 6","305,145A","312,180A","299,755A","291,430A","343,575A"
+,,"Percent",,,,
+,"Job vacancy rate 7","2.7B","3.1C","3.8B","3.2C","3.4B"
+"Quebec",,"Number",,,,
+,"Job vacancies 4","131,095A","132,910A","134,625A","130,735A","125,685A"
+,"Payroll employees 5 6","3,728,255A","3,801,145A","3,797,435A","3,809,815A","3,890,620A"
+,,"Percent",,,,
+,"Job vacancy rate 7","3.4A","3.4A","3.4A","3.3A","3.1A"
+"Ontario",,"Number",,,,
+,"Job vacancies 4","211,705A","212,545A","213,620A","204,180A","199,840A"
+,"Payroll employees 5 6","6,600,865A","6,578,980A","6,621,745A","6,649,575A","6,747,775A"
+,,"Percent",,,,
+,"Job vacancy rate 7","3.1A","3.1A","3.1A","3.0A","2.9A"
+"Manitoba",,"Number",,,,
+,"Job vacancies 4","17,590B","24,995B","17,725C","22,200B","26,610C"
+,"Payroll employees 5 6","594,625A","595,020A","596,565A","597,005A","615,085A"
+,,"Percent",,,,
+,"Job vacancy rate 7","2.9B","4.0B","2.9C","3.6B","4.1C"
+"Saskatchewan",,"Number",,,,
+,"Job vacancies 4","22,255B","19,655B","18,940B","21,775C","19,395B"
+,"Payroll employees 5 6","491,035A","474,040A","492,570A","493,675A","497,015A"
+,,"Percent",,,,
+,"Job vacancy rate 7","4.3B","4.0B","3.7B","4.2C","3.8B"
+"Alberta",,"Number",,,,
+,"Job vacancies 4","81,320B","76,285B","73,825B","76,500B","71,205B"
+,"Payroll employees 5 6","2,028,850A","2,043,105A","2,029,725A","2,051,795A","2,103,265A"
+,,"Percent",,,,
+,"Job vacancy rate 7","3.9B","3.6A","3.5B","3.6B","3.3A"
+"British Columbia",,"Number",,,,
+,"Job vacancies 4","93,415B","94,525A","107,585B","102,720B","105,245A"
+,"Payroll employees 5 6","2,383,505A","2,383,700A","2,414,225A","2,398,740A","2,426,055A"
+,,"Percent",,,,
+,"Job vacancy rate 7","3.8B","3.8A","4.3B","4.1B","4.2A"
+"Yukon",,"Number",,,,
+,"Job vacancies 4","825D","1,215D","1,220E","1,050E","1,250D"
+,"Payroll employees 5 6","18,120A","18,215A","19,095B","19,330A","20,500A"
+,,"Percent",,,,
+,"Job vacancy rate 7","4.3D","6.2D","6.0E","5.1D","5.7D"
+"Northwest Territories",,"Number",,,,
+,"Job vacancies 4","650E","715D","2,210E","1,485E","880E"
+,"Payroll employees 5 6","21,210A","22,290A","22,805B","22,165C","22,610A"
+,,"Percent",,,,
+,"Job vacancy rate 7","3.0E","3.1D","8.8E","6.3E","3.7D"
+"Nunavut",,"Number",,,,
+,"Job vacancies 4","570E","F","365E","890E","F"
+,"Payroll employees 5 6","15,220A","16,370B","16,490A","15,965B","F"
+,,"Percent",,,,
+,"Job vacancy rate 7","3.6E","F","2.2E","5.3E","F"
+
+Symbol legend:
+E, use with caution
+F, too unreliable to be published
+A, data quality: excellent
+B, data quality: very good
+C, data quality: good
+D, data quality: acceptable
+
+
+
+
+Footnotes:
+1,"Data quality indicators are based on the coefficient of variation (CV), the non-response errors, the imputation errors, and subject matter expertise: A – Excellent; B - Very good; C - Good; D – Acceptable; E - Use with caution; F - Too unreliable to publish."
+2,"Estimates are preliminary before the associated quarterly data is released. The three monthly estimates in a quarter are revised as final when the quarterly estimates are released, or shortly after."
+3,"Data for the second and third quarters of 2020 are unavailable due to some Statistics Canada operations being temporarily suspended during the COVID-19 pandemic."
+4,"A job is vacant if it meets the following conditions: it is vacant on the reference date (first day of the month) or will become vacant during the month; there are tasks to be carried out during the month for the job in question; and the employer is actively seeking a worker outside the organization to fill the job. The jobs could be full-time, part-time, permanent, temporary, casual, or seasonal. Jobs reserved for subcontractors, external consultants, or other workers who are not considered employees, are excluded."
+5,"The "employee" concept used in the Job Vacancy and Wage Survey (JVWS) is comprised of full-time employees, part-time employees, as well as permanent, casual, temporary, and seasonal employees. It also includes working owners, directors, partners, and other officers of incorporated businesses, as well as employees who work off site (for example, at home or on the road) but report to the location, and those employees on paid leave. The "employee" concept used in the JVWS is meant to exclude owners or partners of unincorporated businesses and professional practices, the self-employed, subcontractors, external consultants, unpaid family workers, persons working outside Canada, and military personnel. It also excludes employees on unpaid leave, such as those on extended sick leave who are receiving insurance benefits."
+6,"The employment estimates from the Job Vacancy and Wage Survey (JVWS) are calibrated to corresponding employment estimates from the <a href="https://www23.statcan.gc.ca/imdb/p2SV.pl?Function=getSurvey&SDDS=2612">Survey of Employment, Payrolls and Hours</a> (SEPH), usually at the North American Industry Classification System sector (NAICS2) level by province. The reference period for JVWS is the first day of the month, which corresponds to the previous month for SEPH. Therefore, JVWS estimates for the current month are calibrated to SEPH estimates for the previous month. To improve timeliness of the preliminary JVWS estimates, they are calibrated to preliminary SEPH employment estimates. The final JVWS estimates are calibrated to final SEPH employment estimates. Users wishing to analyse employment data are advised to use the most current Labour Force Survey and SEPH estimates."
+7,"The job vacancy rate is the number of job vacancies expressed as a percentage of labour demand; that is, all occupied and vacant jobs."
+
+
+
+"How to cite: Statistics Canada. Table 14-10-0371-01  Job vacancies, payroll employees, and job vacancy rate by provinces and territories, monthly, unadjusted for seasonality"
+https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1410037101
