@@ -13,6 +13,15 @@ from django.contrib import messages
 from .serializers import RegisterSerializer
 from django.core.mail import get_connection, EmailMessage
 import json, smtplib
+from django.contrib.auth import login, logout
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import get_user_model
+from django.utils.encoding import force_str 
+from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth import authenticate
 
 def activate_email(request, user, to_email):
     try:
@@ -65,77 +74,258 @@ def register(request):
         username = email.split('@')[0]
 
         try:
-            user = User.objects.get(email=email)
-            if not user.is_active: # check if user is already activated
-                if activate_email(request, user, email): # send activation email
+            user = User.objects.using('authentication').get(email=email)
+            if not user.is_active:  # Check if user is already activated
+                if activate_email(request, user, email):  # Send activation email
                     return JsonResponse({'success': True, 'message': 'A new activation link has been sent to your email.'})
-                else: # failed to send activation email (user already exists & is active)
+                else:  # Failed to send activation email
                     return JsonResponse({'success': False, 'message': 'An account already exists with this email. Please log in.'}, status=500)
-            else: # user is already activated
+            else:  # User is already activated
                 return JsonResponse({'success': False, 'message': 'This account is already activated. Please log in.'}, status=400)
-        except User.DoesNotExist: # user does not exist
-            user = User.objects.create_user(username=username, email=email, password=password, is_active=False)
-            if activate_email(request, user, email): # send activation email
+        except User.DoesNotExist:  # User does not exist
+            user = User.objects.db_manager('authentication').create_user(username=username, email=email, password=password, is_active=False)
+            
+            if activate_email(request, user, email):  # Send activation email
                 return JsonResponse({'success': True, 'message': 'Please check your email to verify your account.'})
-            else: # failed to send activation email
+            else:  # Failed to send activation email
                 return JsonResponse({'success': False, 'message': 'Failed to send verification email. Please try again later.'}, status=500)
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
-
     
 def activate(request, uidb64, token):
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        # Fetch the user from the 'authentication' database
+        user = User.objects.using('authentication').get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
     
     if user is not None and default_token_generator.check_token(user, token):
         user.is_active = True
+        # Save the user using the 'authentication' database
         user.save(using="authentication")
         messages.success(request, 'Your email has been verified.')
         return HttpResponse('Thank you for confirming your email. Your account is now activated.')   
     else:
         messages.warning(request, 'The link is invalid.')
         return HttpResponse('Activation link is invalid!', status=400)
-    
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth import get_user_model
 
-    # users are not being added to the 'authentication' database, instead being added to the 'default' database;
-    # delete the default database and change the saving of the users to 'authentication'
-    # implement forgot password functionality
-    # return a response for if the password does not match the email
-
-@csrf_exempt
+@csrf_protect
 @api_view(['POST'])
 def login_user(request):
     email = request.data.get('email')
     password = request.data.get('password')
-    
+
     if not email or not password:
         return Response({'success': False, 'message': 'Email and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    print(f"Email: {email}, Password: {password}")
 
     User = get_user_model()
 
     try:
-        # Attempt to retrieve the user from the 'authentication' database
         user = User.objects.using('authentication').get(email=email)
     except User.DoesNotExist:
-        # Account doesn't exist
-        print("User does not exist")
         return JsonResponse({'success': False, 'message': 'Account does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
     if user.check_password(password):
         if user.is_active:
-            # Successful login
-            return JsonResponse({'success': True, 'is_active': True, 'message': 'Login successful.'}, status=status.HTTP_200_OK)
+            # Authenticate and log the user in
+            authenticated_user = authenticate(request=request, username=user.username, password=password)
+            if authenticated_user is not None:
+                login(request, authenticated_user)
+
+                # Send back a success message along with the username
+                return JsonResponse({
+                    'success': True,
+                    'is_active': True,
+                    'message': 'Login successful.',
+                    'username': user.username
+                }, status=status.HTTP_200_OK)
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Authentication failed.'
+                }, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            # Account exists but is not activated
-            return JsonResponse({'success': False, 'is_active': False, 'message': 'Account is not activated. Please check your email to activate your account.'}, status=status.HTTP_403_FORBIDDEN)
+            return JsonResponse({
+                'success': False,
+                'is_active': False,
+                'message': 'Account is not activated. Please check your email.'
+            }, status=status.HTTP_403_FORBIDDEN)
     else:
-        # Password is incorrect
-        return JsonResponse({'success': False, 'message': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid email or password.'
+        }, status=status.HTTP_401_UNAUTHORIZED)
+    
+# Fix the logout function
+@api_view(['POST'])
+def logout_user(request):
+    logout(request)
+    
+    # Send back a success message
+    return JsonResponse({
+        'success': True,
+        'is_active': False,
+        'message': 'Logout successful.'
+    }, status=status.HTTP_200_OK)
+
+@csrf_exempt
+def send_password_reset_email(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+
+            if not email: 
+                return JsonResponse({'error': 'Email field is required.'}, status=400)
+            
+            user = get_object_or_404(User, email=email)
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            reset_link = f'http://localhost:5173/reset-password/{uid}/{token}/'
+
+
+            email_message = EmailMessage(
+                'MacroScope: Password Reset Request',
+                f'Click the link to reset your password: {reset_link}',
+                'i.ratanshi12@outlook.com',  
+                [email],  
+            )
+            email_message.send(fail_silently=False)
+
+            return JsonResponse({'success': True})
+        
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON format.'}, status=400)
+        except Exception as e:
+            print(f"Error: {e}")
+            return JsonResponse({'error': 'User not found or other error occurred.'}, status=400)
+    
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+@csrf_exempt
+def reset_password(request, uidb64, token):
+    if request.method == 'POST':
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return JsonResponse({'success': False, 'message': 'Invalid token or user'})
+
+        if default_token_generator.check_token(user, token):
+            # Get new password from the POST request
+            data = json.loads(request.body)
+            new_password = data.get('password')
+
+            if not new_password:
+                return JsonResponse({'success': False, 'message': 'Password field is required'})
+
+            # Set the new password and save the user
+            user.set_password(new_password)
+            user.save(using='authentication')
+            return JsonResponse({'success': True, 'message': 'Password reset successful'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid token'})
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def update_security(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_id = request.user.id  
+        new_email = data.get('email')
+        new_password = data.get('password')
+
+        if not new_email or not new_password:
+            return JsonResponse({'error': 'Email and password are required'}, status=400)
+
+        try:
+            # Check if the new email is already in use by another user
+            if User.objects.using('authentication').filter(email=new_email).exclude(id=user_id).exists():
+                return JsonResponse({'error': 'email_in_use'}, status=400)
+
+            # Get the current user
+            user = User.objects.get(id=user_id, using='authentication')
+            # Set the new password
+            user.set_password(new_password)
+
+            # If the email has changed, send a verification email but don't update the email in the DB yet
+            if user.email != new_email:
+                if send_verification_email(request, user, new_email):
+                    # Save new email in a separate field, like user.profile or a pending changes table
+                    user.profile.pending_email = new_email
+                    user.profile.save(using='authentication')
+                    return JsonResponse({'success': True, 'message': 'Please verify your new email to complete the update.'}, status=200)
+                else:
+                    return JsonResponse({'error': 'Failed to send verification email'}, status=500)
+
+            user.save(using='authentication')
+            return JsonResponse({'success': True, 'message': 'Security information updated successfully'}, status=200)
+
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+# Function to send a verification email
+def send_verification_email(request, user, to_email):
+    mail_subject = 'Activate your user account'
+    domain = 'http://127.0.0.1:8080'
+    message = render_to_string('activation_email.html', {
+        'user': user.username,
+        'domain': domain,
+        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+        'token': default_token_generator.make_token(user),
+        'protocol': 'https' if request.is_secure() else 'http'
+    })
+    
+    email = EmailMessage(mail_subject, message, to=[to_email])
+    try:
+        connection = get_connection()
+        email.connection = connection
+        
+        if email.send():
+            messages.success(request, 'Please confirm your email address to complete the update.')
+            return True
+        else:
+            messages.error(request, 'Email not sent')
+            return False
+    except smtplib.SMTPDataError as e:
+        messages.error(request, f"Error sending email: {str(e)}")
+        return False
+
+def verify_email_change(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.using('authentication').get(pk=uid)
+
+        # Check if the token is valid
+        if default_token_generator.check_token(user, token):
+            # Update the user's email with the pending email
+            if user.profile.pending_email:
+                user.email = user.profile.pending_email
+                user.profile.pending_email = None
+                user.save(using='authentication')
+                user.profile.save(using='authentication')
+                messages.success(request, 'Your email has been updated successfully.')
+                return JsonResponse({'success': True}, status=200)
+            else:
+                return JsonResponse({'error': 'No email change pending.'}, status=400)
+        else:
+            return JsonResponse({'error': 'Invalid token.'}, status=400)
+
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return JsonResponse({'error': 'Invalid request.'}, status=400)
+
+
+@api_view(['POST'])
+def get_user_details(request):
+    user = request.user
+    print(user.username)
+
+    return Response({
+        'full_name': user.username,  # Use username
+        'email': user.email,
+        'member_since': user.date_joined.strftime('%Y-%m-%d'),  
+    }, status=200)
