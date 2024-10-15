@@ -25,3 +25,5 @@ MacroScope is a web application designed to track and analyze key economic indic
 - Reserves:https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1010012701&cubeTimeFrame.startMonth=01&cubeTimeFrame.startYear=1951&cubeTimeFrame.endMonth=07&cubeTimeFrame.endYear=2024&referencePeriods=19510101%2C20240701
 
 <img width="1512" alt="image" src="https://github.com/user-attachments/assets/ba4e1cdd-5f16-4dcf-821c-cc054fc6b3fe">
+<img width="1512" alt="image" src="https://github.com/user-attachments/assets/51dae921-e479-4139-9176-74891d00d1d2">
+
