@@ -5,6 +5,14 @@
       :title="errorTitle"
       :message="errorMessage"
       @close="errorMessage = ''"
+      class="error-toast"
+    />
+    <UpdateToast
+      v-if="updateMessage"
+      :title="updateTitle"
+      :message="updateMessage"
+      @close="updateMessage = ''"
+      class="update-toast"
     />
     <header class="start-page-header">
       <h1>MacroScope</h1>
@@ -22,6 +30,7 @@
             <label for="email">{{ isRegistering ? 'Email' : 'Email' }}</label>
             <input v-model="email" type="email" id="email" required @blur="validateEmail" />
           </div>
+
           <div class="input-group">
             <label for="password">{{ isRegistering ? 'Password' : 'Password' }}</label>
             <div class="password-wrapper">
@@ -31,7 +40,12 @@
                 id="password"
                 required
               />
-              <button type="button" class="toggle-password" @click="togglePasswordVisibility">
+              <button
+                type="button"
+                class="toggle-password"
+                @click="togglePasswordVisibility"
+                aria-label="Toggle password visibility"
+              >
                 {{ showPassword ? 'Hide' : 'Show' }}
               </button>
             </div>
@@ -46,6 +60,9 @@
             {{ isRegistering ? 'Login' : 'Register' }}
           </span>
         </p>
+        <p v-if="!isRegistering" class="forgot-password">
+          <span @click="navigateToForgotPassword">Forgot Password?</span>
+        </p>
       </section>
     </main>
   </div>
@@ -54,11 +71,13 @@
 <script>
 import axios from 'axios'
 import ErrorToast from './ErrorToast.vue'
+import UpdateToast from './UpdateToast.vue'
 
 export default {
   name: 'StartPage',
   components: {
-    ErrorToast
+    ErrorToast,
+    UpdateToast
   },
   data() {
     return {
@@ -71,94 +90,75 @@ export default {
       errorTitle: 'Error'
     }
   },
+  created() {
+    const savedMode = localStorage.getItem('isDarkMode')
+    this.isDarkMode = savedMode === 'true'
+  },
   methods: {
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode
-      const modeButton = document.querySelector('.mode-toggle')
-      if (this.isDarkMode) {
-        modeButton.style.backgroundColor = '#121212'
-        modeButton.style.color = '#ffffff'
-      } else {
-        modeButton.style.backgroundColor = '#f0f4f8'
-        modeButton.style.color = '#333333'
-      }
+      localStorage.setItem('isDarkMode', this.isDarkMode)
     },
     toggleAuthMode() {
       this.isRegistering = !this.isRegistering
+      this.email = ''
+      this.password = ''
     },
     togglePasswordVisibility() {
       this.showPassword = !this.showPassword
     },
     handleLogin() {
-      console.log('Login:', this.email, this.password)
-
-      const payload = {
-        email: this.email,
-        password: this.password
-      }
-
+      const payload = { email: this.email, password: this.password }
       axios
         .post('http://127.0.0.1:8080/auth/login/', payload)
         .then((response) => {
-          console.log('Login response:', response.data)
           if (response.data.success && response.data.is_active) {
+            localStorage.setItem('username', response.data.username)
             this.$router.push('/dashboard')
           } else if (!response.data.is_active) {
-            this.errorMessage =
-              'Your account is not activated. Please check your email to activate your account.'
+            this.errorMessage = 'Your account is not activated. Please check your email to activate your account.'
           } else {
             this.errorMessage = response.data.message
           }
         })
         .catch((error) => {
-          console.error('Error during login:', error)
           if (error.response && error.response.status === 404) {
             this.errorMessage = 'Account does not exist. Please register first.'
           } else if (error.response && error.response.status === 401) {
             this.errorMessage = 'Invalid email or password.'
-          } else if (error.response && error.response.status === 403) {
-            this.errorMessage = 'Your account is not activated. Please check your email.'
           } else {
-            this.errorMessage = 'An error occurred while trying to log in. Please try again later.'
+            this.errorMessage = 'An error occurred during login. Please try again later.'
           }
         })
     },
-
     handleRegister() {
-      console.log('Registering with:', this.email, this.password)
-      const payload = {
-        email: this.email,
-        password: this.password
-      }
-      console.log(payload)
-
+      const payload = { email: this.email, password: this.password }
       fetch('http://127.0.0.1:8080/auth/register/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
         .then((response) => response.json())
         .then((data) => {
           if (data.success) {
-            this.errorTitle = 'Success'
-            this.errorMessage = 'Please check your email to verify your account.'
+            this.updateTitle = 'Success'
+            this.updateMessage = 'Please check your email to verify your account.'
           } else {
             this.errorMessage = 'Error: ' + data.message
           }
         })
         .catch((error) => {
-          console.error('Error during registration:', error)
-          this.errorMessage = 'An error occurred while trying to register. Please try again later.'
+          this.errorMessage = 'An error occurred during registration. Please try again later.'
         })
     },
-
     validateEmail() {
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailPattern.test(this.email)) {
         this.errorMessage = 'Please enter a valid email address'
       }
+    },
+    navigateToForgotPassword() {
+      this.$router.push('/forgot-password')
     }
   }
 }
@@ -249,6 +249,12 @@ export default {
   width: 100%;
 }
 
+@media (max-width: 768px) {
+  .auth-box {
+    width: 90%;
+  }
+}
+
 .toggle-password {
   position: absolute;
   right: 10px;
@@ -304,7 +310,25 @@ export default {
   --button-bg: #007bff;
   --button-hover-bg: #0056b3;
   --link-color: #80c0ff;
-  background-color: #121212;
+  background-color: #1c1c1c;
   color: #ffffff;
+}
+
+.forgot-password {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.forgot-password span {
+  color: var(--link-color);
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.auth-button {
+  transition: transform 0.2s ease;
+}
+.auth-button:hover {
+  transform: translateY(-2px);
 }
 </style>
