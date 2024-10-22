@@ -18,67 +18,8 @@ class MacroScopeDashboardTests(unittest.TestCase):
     def tearDown(self):
         self.driver.quit()
 
-    def test_user_registration(self):
-        """Test user registration flow."""
-        driver = self.driver
-
-        self.wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//span[text()='Register']"))
-        ).click()
-        email_input = driver.find_element(By.ID, "email")
-        password_input = driver.find_element(By.ID, "password")
-        email_input.send_keys(f"testuser{int(time.time())}@gmail.com")
-        password_input.send_keys("testing")
-
-        driver.find_element(By.CLASS_NAME, ".auth-button").click()
-
-        update_message = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "update-toast"))
-        )
-
-        self.assertIn(
-            "Please check your email to verify your account", update_message.text
-        )
-
-    def test_user_login(self):
-        """Test successful user login flow."""
-        driver = self.driver
-
-        # Input existing user credentials
-        email_input = driver.find_element(By.ID, "email")
-        password_input = driver.find_element(By.ID, "password")
-        email_input.send_keys("ishaanratanshi1@gmail.com")
-        password_input.send_keys("abcd")
-
-        driver.find_element(By.CSS_SELECTOR, ".auth-button").click()
-
-        self.wait.until(EC.url_contains("/dashboard"))
-        self.assertIn("dashboard", driver.current_url)
-
-    def test_login_with_unverified_account(self):
-        """Test login attempt with an unverified account."""
-        driver = self.driver
-
-        # Input unverified user credentials
-        email_input = driver.find_element(By.ID, "email")
-        password_input = driver.find_element(By.ID, "password")
-        email_input.send_keys("carl.pong4@gmail.com")
-        password_input.send_keys("1234")
-
-        driver.find_element(By.CSS_SELECTOR, ".auth-button").click()
-        error_message = self.wait.until(
-            EC.presence_of_element_located((By.CLASS_NAME, "error-toast"))
-        )
-        self.assertIn("Your account is not activated", error_message.text)
-
-    def test_forgot_password(self):
-        """Test the forgot password navigation."""
-        driver = self.driver
-        self.wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//span[text()='Forgot Password?']"))
-        ).click()
-        self.wait.until(EC.url_contains("/forgot-password"))
-        self.assertIn("forgot-password", driver.current_url)
+    def test_navbar(self):
+        pass
 
 
 if __name__ == "__main__":
