@@ -3,7 +3,7 @@
 <template>
   <nav :class="['navbar', theme === 'dark' ? 'navbar-dark bg-dark' : 'navbar-light bg-light']">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">MacroScope</a>
+      <a class="navbar-brand" href="#" @click="navigateToHome">MacroScope</a>
       <ul class="navbar-nav ms-auto d-flex align-items-center">
         <li class="nav-item" @click="navigateToHome">
           <a :class="['nav-link', theme === 'dark' ? 'text-white' : 'text-dark']" href="#">Home</a>
@@ -12,7 +12,9 @@
           <a :class="['nav-link', theme === 'dark' ? 'text-white' : 'text-dark']" href="#">About</a>
         </li>
         <li class="nav-item" @click="navigateToForecast">
-          <a :class="['nav-link', theme === 'dark' ? 'text-white' : 'text-dark']" href="#">Forecast</a>
+          <a :class="['nav-link', theme === 'dark' ? 'text-white' : 'text-dark']" href="#"
+            >Forecast</a
+          >
         </li>
         <li class="nav-item" @click="navigateToDashboard">
           <a :class="['nav-link', theme === 'dark' ? 'text-white' : 'text-dark']" href="#"
@@ -55,7 +57,10 @@
             aria-labelledby="userDropdown"
           >
             <li @click="navigateToProfile">
-              <a :class="['dropdown-item', theme === 'dark' ? 'text-white' : 'text-dark']" href="#" @click="navigateToProfile"
+              <a
+                :class="['dropdown-item', theme === 'dark' ? 'text-white' : 'text-dark']"
+                href="#"
+                @click="navigateToProfile"
                 >Profile</a
               >
             </li>
@@ -79,6 +84,7 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
 
+axios.defaults.withCredentials = true
 export default {
   data() {
     return {
@@ -111,28 +117,41 @@ export default {
       }
     },
     logout() {
+      // Remove user-related data from local storage
       localStorage.removeItem('username')
+      localStorage.removeItem('session_id') // Clear session ID if stored
 
+      // Get the CSRF token from cookies
       const csrfToken = Cookies.get('csrftoken')
 
+      // Make a logout request to the backend
       axios
         .post(
           'http://127.0.0.1:8080/auth/logout/',
-          {},
+          {}, // Empty request body
           {
+            withCredentials: true, // Ensure cookies are sent
             headers: {
-              'X-CSRFToken': csrfToken
+              'X-CSRFToken': csrfToken,
+              'Content-Type': 'application/json'
             }
           }
         )
         .then((response) => {
           console.log('Logout response:', response.data)
 
+          // Check if logout was successful
           if (response.data.success && !response.data.is_active) {
             console.log('Logout successful...')
+
+            // Clear any other relevant data
+            localStorage.clear() // Optional: Clear all local storage if needed
+
+            // Redirect to home or login page
             this.$router.push('/')
           } else {
             console.error('Logout failed. No redirect.')
+            this.errorMessage = 'Logout failed. Please try again.'
           }
         })
         .catch((error) => {
@@ -169,7 +188,7 @@ export default {
     },
     navigateToProfile() {
       this.$router.push('/profile')
-    },
+    }
   }
 }
 </script>
@@ -248,7 +267,7 @@ export default {
 }
 
 .dropdown-item:hover {
-  background-color: #e9ecef; 
+  background-color: #e9ecef;
 }
 
 [data-theme='dark'] .dropdown-item:hover {
@@ -263,4 +282,3 @@ export default {
   color: black;
 }
 </style>
-  

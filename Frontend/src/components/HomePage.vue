@@ -99,7 +99,7 @@ export default {
     }
   },
   created() {
-    this.loadTheme() 
+    this.loadTheme()
   },
   methods: {
     loadTheme() {

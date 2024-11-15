@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "chart.js": "^4.4.4",
+    "js-cookies": "^1.0.4"
+  }
+}

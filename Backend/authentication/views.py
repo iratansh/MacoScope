@@ -22,6 +22,8 @@ from django.contrib.auth import get_user_model
 from django.utils.encoding import force_str 
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth import authenticate
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
 
 def activate_email(request, user, to_email):
     try:
@@ -59,6 +61,15 @@ def activate_email(request, user, to_email):
     except smtplib.SMTPDataError as e:
         messages.error(request, f"Error sending email: {str(e)}")
         return False
+
+@api_view(['GET'])
+def check_authentication_status(request):
+    print("Session ID in dashboard:", request.session.session_key)
+    return Response({
+        "is_authenticated": request.user.is_authenticated,
+        "user": request.user.username if request.user.is_authenticated else None
+    }, status=200)
+
 
 
 @csrf_exempt
@@ -108,55 +119,58 @@ def activate(request, uidb64, token):
     else:
         messages.warning(request, 'The link is invalid.')
         return HttpResponse('Activation link is invalid!', status=400)
-
+        
 @csrf_protect
 @api_view(['POST'])
 def login_user(request):
     email = request.data.get('email')
     password = request.data.get('password')
-
+    
     if not email or not password:
         return Response({'success': False, 'message': 'Email and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
-
+    
     User = get_user_model()
-
+    
     try:
         user = User.objects.using('authentication').get(email=email)
     except User.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Account does not exist.'}, status=status.HTTP_404_NOT_FOUND)
-
+    
     if user.check_password(password):
         if user.is_active:
-            # Authenticate and log the user in
             authenticated_user = authenticate(request=request, username=user.username, password=password)
             if authenticated_user is not None:
                 login(request, authenticated_user)
+                
+                # Save the session
+                request.session.save()
 
-                # Send back a success message along with the username
-                return JsonResponse({
+                # Retrieve session key
+                session_key = request.session.session_key
+
+                # Set the session ID in the response cookie
+                response = JsonResponse({
                     'success': True,
                     'is_active': True,
                     'message': 'Login successful.',
-                    'username': user.username
+                    'username': user.username,
+                    'session_key': session_key
                 }, status=status.HTTP_200_OK)
+
+                # Set the sessionid cookie
+                response.set_cookie('sessionid', session_key, httponly=True, samesite='Lax')
+                return response
             else:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Authentication failed.'
-                }, status=status.HTTP_401_UNAUTHORIZED)
+                return JsonResponse({'success': False, 'message': 'Authentication failed.'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return JsonResponse({
-                'success': False,
-                'is_active': False,
-                'message': 'Account is not activated. Please check your email.'
-            }, status=status.HTTP_403_FORBIDDEN)
+            return JsonResponse({'success': False, 'message': 'Account is not activated.'}, status=status.HTTP_403_FORBIDDEN)
     else:
-        return JsonResponse({
-            'success': False,
-            'message': 'Invalid email or password.'
-        }, status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({'success': False, 'message': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
     
 # Fix the logout function
+@csrf_protect
 @api_view(['POST'])
 def logout_user(request):
     logout(request)
@@ -318,14 +332,54 @@ def verify_email_change(request, uidb64, token):
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         return JsonResponse({'error': 'Invalid request.'}, status=400)
 
+from django.contrib.sessions.models import Session
+from django.contrib.sessions.backends.db import SessionStore
+
+def inspect_session(session_key):
+    session = SessionStore(session_key=session_key)
+    return session.get('_auth_user_id', None), session.get('_auth_user_backend', None)
+
+
+from django.utils import timezone
 
 @api_view(['POST'])
 def get_user_details(request):
-    user = request.user
-    print(user.username)
+    print("User authenticated:", request.user.is_authenticated)
 
+    if request.user.is_authenticated:
+        # If authenticated via request.user, return user details
+        return Response({
+            'full_name': request.user.username,
+            'email': request.user.email,
+            'member_since': request.user.date_joined.strftime('%Y-%m-%d'),
+        }, status=status.HTTP_200_OK)
+
+    # Check for session ID in custom header
+    session_id = request.headers.get('X-Session-ID')
+    if session_id:
+        # Query session data from 'authentication' database
+        session = Session.objects.using('authentication').filter(
+            session_key=session_id, expire_date__gt=timezone.now()
+        ).first()
+        if session:
+            # Decode session data to get user_id
+            session_data = session.get_decoded()
+            user_id = session_data.get('_auth_user_id')
+            if user_id:
+                try:
+                    user = User.objects.get(id=user_id)
+                    return Response({
+                        'full_name': user.username,
+                        'email': user.email,
+                        'member_since': user.date_joined.strftime('%Y-%m-%d'),
+                    }, status=status.HTTP_200_OK)
+                except User.DoesNotExist:
+                    return Response({'message': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    # If no valid session or authentication found
     return Response({
-        'full_name': user.username,  # Use username
-        'email': user.email,
-        'member_since': user.date_joined.strftime('%Y-%m-%d'),  
-    }, status=200)
+        'success': False,
+        'message': 'User is not authenticated.'
+    }, status=status.HTTP_401_UNAUTHORIZED)
+
+

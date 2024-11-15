@@ -3,6 +3,7 @@
   <div :class="['forecast-page', isDarkMode ? 'dark' : 'light']">
     <main class="forecast-container">
       <h1 :class="{ 'dark-header': isDarkMode }">Forecast</h1>
+
       <div class="forecast-buttons">
         <TipStar
           tip="Select different economic indicators to view forecasted trends."
@@ -11,11 +12,11 @@
         <button
           v-for="indicator in indicators"
           :key="indicator"
-          :class="[
-            'forecast-button',
-            currentIndicator === indicator ? 'active' : '',
-            loading ? 'disabled' : ''
-          ]"
+          :class="{
+            'forecast-button': true,
+            active: currentIndicator === indicator,
+            disabled: loading
+          }"
           @click="setChart(indicator)"
           :disabled="loading"
         >
@@ -27,11 +28,12 @@
         <canvas id="forecastChart" ref="lineChartCanvas"></canvas>
       </div>
 
-      <div class="forecast-info">
+      <div v-if="loading" :class="{ 'dark-header': isDarkMode }">Loading...</div>
+      <div v-if="error" class="error">{{ error }}</div>
+
+      <div class="forecast-info" v-if="currentInterpretation">
         <h2>Interpreting the Data</h2>
-        <p>
-          {{ currentInterpretation }}
-        </p>
+        <p>{{ currentInterpretation }}</p>
       </div>
     </main>
   </div>
@@ -41,6 +43,9 @@
 import Navbar from './NavBar.vue'
 import { Chart } from 'chart.js/auto'
 import TipStar from './TipStar.vue'
+import axios from 'axios'
+
+axios.defaults.withCredentials = true;
 
 export default {
   name: 'ForecastPage',
@@ -53,27 +58,14 @@ export default {
       theme: 'light',
       isDarkMode: false,
       indicators: ['GDP', 'Unemployment', 'Inflation'],
-      forecastData: {
-        GDP: {
-          data: [100, 120, 150, 170, 200],
-          interpretation:
-            'GDP represents the total value of all goods and services produced in a country. A rising GDP indicates economic growth.'
-        },
-        Unemployment: {
-          data: [7.1, 6.9, 6.8, 7.0, 6.7],
-          interpretation:
-            'The unemployment rate shows the percentage of the labor force that is without work. Lower unemployment rates indicate a healthier job market.'
-        },
-        Inflation: {
-          data: [1.5, 1.8, 2.0, 2.2, 2.5],
-          interpretation:
-            'Inflation reflects the rate at which the general price level of goods and services rises. High inflation reduces purchasing power.'
-        }
-      },
       currentIndicator: 'GDP',
       currentInterpretation: '',
+      forecast: [], // Dynamic forecast data
       loading: false,
-      chart: null
+      chart: null,
+      error: null, // To capture any errors
+      cache: {}, // Cache to store fetched data
+      cooldowns: {} // Track cooldowns for each indicator
     }
   },
   mounted() {
@@ -83,58 +75,132 @@ export default {
   methods: {
     async setChart(indicator) {
       if (this.loading) return
-      this.loading = true
+
+      this.loading = true // Start the loading state before any processing
       this.currentIndicator = indicator
+      this.error = null
+
+      // Disable all buttons during the cooldown period
+      this.disableButtons(true)
 
       try {
-        const chartData = this.forecastData[indicator].data
-        this.currentInterpretation = this.forecastData[indicator].interpretation
-
-        if (this.chart) {
-          this.chart.destroy()
+        // If the data is cached, simulate a cooldown effect using a timeout
+        if (this.cache[indicator]) {
+          setTimeout(() => {
+            this.updateChart(indicator, this.cache[indicator])
+            this.loading = false // End the loading state after chart update
+            // Enable buttons after cooldown
+            this.disableButtons(false)
+          }, 1000) // Simulate a 1-second cooldown
+          return
         }
 
-        const ctx = this.$refs.lineChartCanvas.getContext('2d')
-        this.chart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: ['2020', '2021', '2022', '2023', '2024'],
-            datasets: [
-              {
-                label: `${indicator} Forecast`,
-                data: chartData,
-                borderColor: this.isDarkMode ? '#ffffff' : '#333333',
-                backgroundColor: this.isDarkMode
-                  ? 'rgba(255, 255, 255, 0.1)'
-                  : 'rgba(0, 0, 0, 0.1)',
-                borderWidth: 2
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              x: {
-                ticks: {
-                  color: this.isDarkMode ? '#ffffff' : '#333333'
-                }
+        // Fetch forecast data from Django API
+        const response = await axios.get(
+          `http://127.0.0.1:8080/forecast/api/predict/${indicator.toLowerCase()}`
+        )
+
+        if (response.data && response.data.forecast) {
+          const forecastData = response.data.forecast
+          this.cache[indicator] = forecastData // Cache the data
+          this.updateChart(indicator, forecastData)
+        } else {
+          throw new Error('No forecast data available')
+        }
+      } catch (error) {
+        console.error('Error fetching forecast data:', error)
+        this.error = 'Unable to fetch forecast data. Please try again later.'
+      } finally {
+        this.loading = false // Ensure loading state is reset
+        // Enable buttons after processing
+        this.disableButtons(false)
+      }
+    },
+
+    updateChart(indicator, data) {
+      this.forecast = data
+      this.currentInterpretation = this.getInterpretation(indicator)
+
+      // Destroy previous chart instance if it exists
+      if (this.chart) {
+        this.chart.destroy()
+      }
+
+      const ctx = this.$refs.lineChartCanvas.getContext('2d')
+
+      // Specific x-axis labels for Unemployment
+      const labels = [1, 2, 3, 4, 5, 6, 7]
+      const x_label = 'Months'
+      var y_label
+
+      if (indicator === 'Unemployment' || indicator === 'Inflation') {
+        y_label = 'Percentage'
+      } else if (indicator === 'GDP') {
+        y_label = 'GDP (Millions of Domestic Currency, Seasonally Adjusted)'
+      }
+
+      // Create the chart with the fetched data
+      this.chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: `${indicator} Forecast`,
+              data: this.forecast,
+              borderColor: 'blue', // Set line color to blue
+              backgroundColor: this.isDarkMode
+                ? 'rgba(0, 0, 255, 0.1)' // Blue background for dark mode
+                : 'rgba(0, 0, 255, 0.1)', // Blue background for light mode
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              ticks: {
+                color: this.isDarkMode ? '#ffffff' : '#333333'
               },
-              y: {
-                ticks: {
-                  color: this.isDarkMode ? '#ffffff' : '#333333'
-                }
+              title: {
+                display: true,
+                text: x_label // Set x-axis label from backend
+              }
+            },
+            y: {
+              ticks: {
+                color: this.isDarkMode ? '#ffffff' : '#333333'
+              },
+              title: {
+                display: true,
+                text: y_label // Set x-axis label from backend
               }
             }
           }
-        })
-      } catch (error) {
-        console.error('Error loading chart data:', error)
-      } finally {
-        setTimeout(() => {
-          this.loading = false
-        }, 1000)
+        }
+      })
+    },
+
+    // Helper function to disable or enable buttons
+    disableButtons(disable) {
+      this.loading = disable // Manage the state directly
+    },
+
+    // Function to return interpretations based on the indicator
+    getInterpretation(indicator) {
+      switch (indicator) {
+        case 'GDP':
+          return 'GDP represents the total value of all goods and services produced in a country. A rising GDP indicates economic growth.'
+        case 'Unemployment':
+          return 'The unemployment rate shows the percentage of the labor force that is without work. Lower unemployment rates indicate a healthier job market.'
+        case 'Inflation':
+          return 'Inflation reflects the rate at which the general price level of goods and services rises. High inflation reduces purchasing power.'
+        default:
+          return ''
       }
     },
+
     loadTheme() {
       const savedTheme = localStorage.getItem('theme') || 'light'
       this.theme = savedTheme
@@ -149,29 +215,14 @@ export default {
   }
 }
 </script>
+
 <style scoped>
 .forecast-page {
   padding: 20px;
   transition:
     background-color 0.3s,
     color 0.3s;
-}
-
-.forecast-container {
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.chart-container {
-  margin-bottom: 30px;
-}
-
-.forecast-page {
-  padding: 20px;
-  transition:
-    background-color 0.3s,
-    color 0.3s;
+  height: 100vh;
 }
 
 .forecast-container {

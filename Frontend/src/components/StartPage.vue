@@ -73,6 +73,7 @@ import axios from 'axios'
 import ErrorToast from './ErrorToast.vue'
 import UpdateToast from './UpdateToast.vue'
 
+axios.defaults.withCredentials = true
 export default {
   name: 'StartPage',
   components: {
@@ -109,28 +110,55 @@ export default {
     },
     handleLogin() {
       const payload = { email: this.email, password: this.password }
+
       axios
-        .post('http://127.0.0.1:8080/auth/login/', payload)
+        .post('http://127.0.0.1:8080/auth/login/', payload, { withCredentials: true })
         .then((response) => {
-          if (response.data.success && response.data.is_active) {
-            localStorage.setItem('username', response.data.username)
-            this.$router.push('/dashboard')
-          } else if (!response.data.is_active) {
-            this.errorMessage = 'Your account is not activated. Please check your email to activate your account.'
+          const { success, is_active, username, message } = response.data
+
+          if (success && is_active) {
+            // Save username and session data in localStorage
+            localStorage.setItem('username', username)
+
+            // Optionally store the session ID if needed for other requests
+            const sessionId = response.headers['set-cookie']
+            if (sessionId) {
+              localStorage.setItem('sessionid', sessionId)
+            }
+
+            // Delay to ensure session cookie is set before navigating
+            setTimeout(() => {
+              this.$router.push('/dashboard')
+            }, 100) // Adjust the delay if necessary
+          } else if (!is_active) {
+            // If the account is not activated
+            this.errorMessage =
+              'Your account is not activated. Please check your email to activate your account.'
           } else {
-            this.errorMessage = response.data.message
+            // General failure message from the backend
+            this.errorMessage = message || 'Login failed. Please try again.'
           }
         })
         .catch((error) => {
-          if (error.response && error.response.status === 404) {
-            this.errorMessage = 'Account does not exist. Please register first.'
-          } else if (error.response && error.response.status === 401) {
-            this.errorMessage = 'Invalid email or password.'
+          // Handle different error scenarios with more detailed messages
+          if (error.response) {
+            const status = error.response.status
+
+            if (status === 404) {
+              this.errorMessage = 'Account does not exist. Please register first.'
+            } else if (status === 401) {
+              this.errorMessage = 'Invalid email or password.'
+            } else if (status === 403) {
+              this.errorMessage = 'Your account is not activated.'
+            } else {
+              this.errorMessage = 'An error occurred during login. Please try again later.'
+            }
           } else {
-            this.errorMessage = 'An error occurred during login. Please try again later.'
+            this.errorMessage = 'Network error. Please check your connection and try again.'
           }
         })
     },
+
     handleRegister() {
       const payload = { email: this.email, password: this.password }
       fetch('http://127.0.0.1:8080/auth/register/', {

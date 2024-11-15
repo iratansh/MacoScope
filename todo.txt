@@ -1,0 +1,19 @@
+- Add the sessions stuff
+- Unit tests
+- Tensorflow model
+
+gdp
+RMSE: 8.250664383881018
+MAE: 8.05028076171875
+R^2: 0.5964023946119995
+
+inflation
+RMSE: 12.830735084682157
+MAE: 12.815542493547712
+R^2: -40.15694070332341
+
+inflation
+Evaluation Results:
+RMSE: 4.516644856511014
+MAE: 4.516644856511014
+R^2: nan

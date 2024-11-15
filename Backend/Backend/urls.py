@@ -24,3 +24,10 @@ urlpatterns = [
     path('verification/', include('verify_email.urls')),
 
 ]
+
+
+
+
+
+
+

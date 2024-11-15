@@ -110,6 +110,7 @@ import axios from 'axios'
 import UpdateToast from './UpdateToast.vue'
 import ErrorToast from './ErrorToast.vue'
 
+axios.defaults.withCredentials = true
 export default {
   name: 'ProfilePage',
   components: {
@@ -164,8 +165,25 @@ export default {
       alert('Preferences saved!')
     },
     getAccountInfo() {
+      const sessionId = localStorage.getItem('session_id') // Retrieve session ID from local storage
+
+      if (!sessionId) {
+        this.errorMessage = 'No session ID found. Please log in again.'
+        return
+      }
+
       axios
-        .post('http://127.0.0.1:8080/auth/account-info/', {}, { withCredentials: true }) // Add withCredentials to ensure cookies/session are sent
+        .post(
+          'http://127.0.0.1:8080/auth/account-info/',
+          {},
+          {
+            withCredentials: true,
+            headers: {
+              'X-Session-ID': sessionId, // Pass the session ID as a custom header
+              'X-CSRFToken': this.getCsrfToken()
+            }
+          }
+        )
         .then((response) => {
           if (response.status === 200) {
             this.fullName = response.data.full_name
@@ -173,13 +191,21 @@ export default {
             this.memberSince = response.data.member_since
             this.errorMessage = ''
           } else {
-            this.errorMessage = response.data.error || 'Unable to retrieve user information.' // Remove the first part after fixing
+            this.errorMessage = response.data.message || 'Unable to retrieve user information.'
           }
         })
         .catch((error) => {
           this.errorMessage =
-            error.response?.data?.error || 'An error occurred while retrieving user information.' // Remove the first part after fixing
+            error.response?.data?.message || 'An error occurred while retrieving user information.'
         })
+    },
+
+    getCsrfToken() {
+      const cookieValue = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('csrftoken='))
+        ?.split('=')[1]
+      return cookieValue
     },
 
     updateSecurity() {

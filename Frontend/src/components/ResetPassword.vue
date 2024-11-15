@@ -37,6 +37,7 @@ import axios from 'axios'
 import ErrorToast from './ErrorToast.vue'
 import UpdateToast from './UpdateToast.vue'
 
+axios.defaults.withCredentials = true;
 export default {
   name: 'ResetPassword',
   components: { ErrorToast, UpdateToast },
