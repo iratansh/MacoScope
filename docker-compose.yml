@@ -1,0 +1,68 @@
+version: '3.8'
+services:
+  db2:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: authentication
+      MYSQL_USER: mysqluser
+      MYSQL_PASSWORD: secret1234
+      MYSQL_ROOT_PASSWORD: secret1234
+    volumes:
+      - mysql_data2:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  db3:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: forecast_db
+      MYSQL_USER: mysqluser
+      MYSQL_PASSWORD: secret1234
+      MYSQL_ROOT_PASSWORD: secret1234
+    volumes:
+      - mysql_data3:/var/lib/mysql
+    ports:
+      - "3307:3306"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db2
+      - db3
+    environment:
+      DB2_HOST: db2
+      DB2_PORT: 3306
+      DB2_USER: mysqluser
+      DB2_PASSWORD: secret1234
+      DB3_HOST: db3
+      DB3_PORT: 3306
+      DB3_USER: mysqluser
+      DB3_PASSWORD: secret1234
+      DJANGO_SETTINGS_MODULE: Backend.settings
+      SECRET_KEY: iratash
+      DEBUG: 'True'
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+      - ./static_data:/app/staticfiles 
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data2:
+  mysql_data3:
+  static_data:
