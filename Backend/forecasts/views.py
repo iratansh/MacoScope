@@ -23,35 +23,37 @@ async def get_forecast(indicator, time_steps=5, future_periods=10):
     forecast = await make_forecast(indicator, future_periods=10)
     return forecast
 
+
 from django.http import JsonResponse
 from asgiref.sync import async_to_sync
 from rest_framework.decorators import api_view
+
 
 def forecast_view(request, indicator):
     try:
         # Generate the forecast using async-to-sync wrapper
         forecast = async_to_sync(make_forecast)(indicator)
-        
+
         if forecast is not None:
-            return JsonResponse({'forecast': forecast.tolist()}, status=200)
+            return JsonResponse({"forecast": forecast.tolist()}, status=200)
         else:
-            return JsonResponse({'error': 'No forecast data available'}, status=404)
+            return JsonResponse({"error": "No forecast data available"}, status=404)
 
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 async def load_data(table_name):
     columns = {}
-    try:
-        connection = await aiomysql.connect(
-            host="localhost",
-            port=3306,
-            user="mysqluser",
-            password="secret1234",
-            db="forecast_db",
-        )
 
+    connection = await aiomysql.connect(
+        host="localhost",
+        port=3306,
+        user="mysqluser",
+        password="secret1234",
+        db="forecast_db",
+    )
+    try:
         async with connection.cursor() as cursor:
             await cursor.execute(f"SELECT * FROM {table_name}")
             headers = [desc[0] for desc in cursor.description]
@@ -151,21 +153,19 @@ def labour_data(request):
 @api_view(["POST"])
 def exchange_data(request):
     logging.info("Exchange rate data requested")
-     # Pagination parameters (e.g., from request)
-    page = int(request.data.get('page', 1))
-    page_size = int(request.data.get('page_size', 100))
+    # Pagination parameters (e.g., from request)
+    page = int(request.data.get("page", 1))
+    page_size = int(request.data.get("page_size", 100))
 
     # Load the exchange rate data asynchronously
     data = async_to_sync(load_data)("exchange")
 
     # Extract the dates
     dates = [d for d in data.get('\ufeff"date"', [])]
-    paginated_dates = dates[(page - 1) * page_size: page * page_size]
-    
+    paginated_dates = dates[(page - 1) * page_size : page * page_size]
 
     # Prepare a list to store datasets for each currency
     datasets = []
-    
 
     # Define colors for each currency dataset (optional)
     colors = [
@@ -173,7 +173,7 @@ def exchange_data(request):
         "#00FF00",  # Green
         "#0000FF",  # Blue
         "#FFFF00",  # Yellow
-        "#FF00FF",  # Magenta   
+        "#FF00FF",  # Magenta
         "#00FFFF",  # Cyan
         "#FFA500",  # Orange
         "#800080",  # Purple
@@ -191,8 +191,7 @@ def exchange_data(request):
                 for v in data.get(key, [])
             ]
 
-            paginated_values = values[(page - 1) * page_size: page * page_size]
-
+            paginated_values = values[(page - 1) * page_size : page * page_size]
 
             # Add each currency data as a separate dataset
             datasets.append(
@@ -216,6 +215,3 @@ def exchange_data(request):
     }
 
     return JsonResponse(response_data)
-
-
-

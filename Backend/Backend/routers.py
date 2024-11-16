@@ -1,27 +1,23 @@
 class AuthenticationRouter:
     def db_for_read(self, model, **hints):
-        if model._meta.app_label == 'auth' or model._meta.model_name == 'session':
+        if model._meta.app_label in ['auth', 'contenttypes', 'sessions']:
             return 'authentication'
         return None
 
     def db_for_write(self, model, **hints):
-        if model._meta.app_label == 'auth' or model._meta.model_name == 'session':
+        if model._meta.app_label in ['auth', 'contenttypes', 'sessions']:
             return 'authentication'
         return None
 
     def allow_relation(self, obj1, obj2, **hints):
-        if (
-            obj1._meta.app_label == 'auth' or obj2._meta.app_label == 'auth' or
-            obj1._meta.model_name == 'session' or obj2._meta.model_name == 'session'
-        ):
+        if obj1._meta.app_label in ['auth', 'contenttypes', 'sessions'] or obj2._meta.app_label in ['auth', 'contenttypes', 'sessions']:
             return True
         return None
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
-        if app_label == 'auth' or model_name == 'session':
+        if app_label in ['auth', 'contenttypes', 'sessions']:
             return db == 'authentication'
         return None
-
 
 class ForecastRouter:
     """
@@ -58,4 +54,11 @@ class ForecastRouter:
         """
         if app_label == 'forecasts':
             return db == 'forecast_db'
+        return None
+
+class AuthRouter:
+    def allow_migrate(self, db, app_label, **hints):
+        # Only allow 'auth' and 'account' migrations in 'auth_db'
+        if app_label in ['auth', 'account']:
+            return db == 'auth_db'
         return None
