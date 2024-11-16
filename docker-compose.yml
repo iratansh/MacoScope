@@ -1,0 +1,87 @@
+version: '3.8'
+services:
+  db1:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: db1_database
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret1234
+      MYSQL_ROOT_PASSWORD: secret1234
+    volumes:
+      - mysql_data1:/var/lib/mysql
+    ports:
+      - "3306:3306"  # Exposing db1 on 3306 for internal use
+
+  db2:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: authentication
+      MYSQL_USER: mysqluser
+      MYSQL_PASSWORD: secret1234
+      MYSQL_ROOT_PASSWORD: secret1234
+    volumes:
+      - mysql_data2:/var/lib/mysql
+    ports:
+      - "3307:3306"  # Exposing db2 on 3307 for internal use
+
+  db3:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: forecast_db
+      MYSQL_USER: mysqluser
+      MYSQL_PASSWORD: secret1234
+      MYSQL_ROOT_PASSWORD: secret1234
+    volumes:
+      - mysql_data3:/var/lib/mysql
+    ports:
+      - "3308:3306"  # Exposing db3 on 3308 for internal use
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db1
+      - db2
+      - db3
+    environment:
+      DB1_HOST: db1
+      DB1_PORT: 3306
+      DB1_NAME: db1_database
+      DB1_USER: root
+      DB1_PASSWORD: secret1234
+
+      DB2_HOST: db2
+      DB2_PORT: 3306
+      DB2_NAME: authentication
+      DB2_USER: mysqluser
+      DB2_PASSWORD: secret1234
+
+      DB3_HOST: db3
+      DB3_PORT: 3306
+      DB3_NAME: forecast_db
+      DB3_USER: mysqluser
+      DB3_PASSWORD: secret1234
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data1:
+  mysql_data2:
+  mysql_data3:
