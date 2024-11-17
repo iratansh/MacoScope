@@ -1,3 +1,7 @@
+"""
+Evaluate the forecasting model for a specific economic indicator with data augmentation
+"""
+
 import os
 import pickle
 import numpy as np
@@ -83,67 +87,3 @@ class Command(BaseCommand):
         
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Error: {e}'))
-
-
-
-
-
-# import os
-# import pickle
-# import numpy as np
-# import asyncio
-# from django.core.management.base import BaseCommand
-# from keras.models import load_model
-# from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-# from forecasts.features import load_data, preprocess_data, create_dataset
-
-# class Command(BaseCommand):
-#     help = 'Evaluate the forecasting model for a specific economic indicator'
-
-#     def add_arguments(self, parser):
-#         parser.add_argument('indicator', type=str, help='Economic indicator (e.g., gdp, unemployment, inflation)')
-
-#     def handle(self, *args, **options):
-#         indicator = options['indicator']
-        
-#         try:
-#             # Load the trained model and scaler without compiling
-#             model_path = os.path.join('forecasts', 'saved_models', f'{indicator.lower()}_forecasting_model.keras')
-#             scaler_path = os.path.join('forecasts', 'saved_models', f'{indicator.lower()}_scaler.pkl')
-#             model = load_model(model_path, compile=False)
-            
-#             # Compile the model after loading
-#             model.compile(optimizer='adam', loss='mse')
-            
-#             with open(scaler_path, 'rb') as f:
-#                 scaler = pickle.load(f)
-
-#             # Load and preprocess data
-#             data = asyncio.run(load_data(indicator))
-#             scaled_data, _ = preprocess_data(data)
-
-#             # Use the last 20% for testing
-#             test_size = int(0.2 * len(scaled_data))
-#             test_data = scaled_data[-test_size:]
-
-#             # Prepare test dataset
-#             x_test, y_test = create_dataset(test_data, time_steps=5)
-#             x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
-
-#             # Predict and inverse transform
-#             predictions = model.predict(x_test)
-#             predictions = scaler.inverse_transform(predictions)
-#             y_test = scaler.inverse_transform(y_test.reshape(-1, 1))
-
-#             # Calculate evaluation metrics
-#             rmse = np.sqrt(mean_squared_error(y_test, predictions))
-#             mae = mean_absolute_error(y_test, predictions)
-#             r2 = r2_score(y_test, predictions)
-
-#             # Output results
-#             self.stdout.write(self.style.SUCCESS(f'RMSE: {rmse}'))
-#             self.stdout.write(self.style.SUCCESS(f'MAE: {mae}'))
-#             self.stdout.write(self.style.SUCCESS(f'R^2: {r2}'))
-        
-#         except Exception as e:
-#             self.stdout.write(self.style.ERROR(f'Error: {e}'))

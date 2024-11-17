@@ -1,3 +1,7 @@
+"""
+Train the forecasting model for a specific economic indicator
+"""
+
 import os
 import pickle
 import tensorflow as tf
@@ -11,7 +15,6 @@ import asyncio
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Backend.settings')
 import django
 django.setup()
-
 
 async def train_model(indicator):
     # Load and preprocess data asynchronously

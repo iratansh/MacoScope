@@ -1,3 +1,8 @@
+"""
+This command loads data from a CSV file into a dynamically created table for each economic indicator
+This is to be used in the local development environment, to store data for each indicator in the database
+"""
+
 import csv
 import mysql.connector
 from django.core.management.base import BaseCommand
