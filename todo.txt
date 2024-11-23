@@ -2,6 +2,8 @@
 - Unit tests
 - Tensorflow model
 
+Right now I left off on transferring this application over to EC2. Need to finish up setting up EC2, and start on RDS. Aftert that add the other stuff that's missing. Make sure you connect this folder to your github
+
 gdp
 RMSE: 8.250664383881018
 MAE: 8.05028076171875

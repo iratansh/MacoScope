@@ -34,7 +34,7 @@ def activate_email(request, user, to_email):
         return False
 
     mail_subject = 'Activate your user account'
-    domain = 'http://127.0.0.1:8080'
+    domain = 'http://0.0.0.0:8080'
     message = render_to_string('activation_email.html', {
         'user': user.username,
         'domain': domain,
@@ -47,8 +47,8 @@ def activate_email(request, user, to_email):
     try:
         connection = get_connection()
         email.connection = connection
-        
-        if email.send():
+    
+        if email.send(fail_silently=False):
             messages.success(request, 'Please confirm your email address to complete the registration')
             return True
         else:
