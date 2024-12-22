@@ -1,7 +1,6 @@
 """
 This file contains the views for the forecast API
 """
-
 from .features import load_data
 from django.http import JsonResponse
 from rest_framework.response import Response
@@ -13,17 +12,13 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from .features import load_data
 from .utils import make_forecast
-
-async def get_forecast(indicator, time_steps=5, future_periods=10):
-    """
-    Get a forecast for a specific indicator
-    """
-    forecast = await make_forecast(indicator, future_periods=10)
-    return forecast
+from django.http import JsonResponse
+from asgiref.sync import async_to_sync
+import logging
 
 def forecast_view(request, indicator):
     """
-    API view to generate a forecast for a specific economic indicator
+    API view to generate a forecast for a specific economic indicator.
 
     Args:
         request (django.http.HttpRequest): The request object
@@ -33,7 +28,6 @@ def forecast_view(request, indicator):
         django.http.JsonResponse: The forecast data as a JSON response
     """
     try:
-        # Generate the forecast using async-to-sync wrapper
         forecast = async_to_sync(make_forecast)(indicator)
 
         if forecast is not None:
@@ -42,98 +36,83 @@ def forecast_view(request, indicator):
             return JsonResponse({"error": "No forecast data available"}, status=404)
 
     except Exception as e:
+        logging.error(f"Error in forecast generation: {e}")
         return JsonResponse({"error": str(e)}, status=500)
-
 
 async def load_data(table_name):
     """
     Load historical economic data from the MySQL database asynchronously.
-
-    Parameters:
-    - table_name: The name of the database table to load from.
-
-    Returns:
-    - columns: A dictionary with column names as keys and lists of values as values.
     """
     columns = {}
-
-    connection = await aiomysql.connect(
-        host="db3",
-        port=3306,
-        user="mysqluser",
-        password="secret1234",
-        db="forecast_db",
-    )
     try:
+        connection = await aiomysql.connect(
+            host="macroscope-db.c928ywm8gz7k.us-east-1.rds.amazonaws.com",
+            port=3306,
+            user="mysqluser",
+            password="secret1234",
+            db="forecast_db",
+        )
         async with connection.cursor() as cursor:
             await cursor.execute(f"SELECT * FROM {table_name}")
-            headers = [desc[0] for desc in cursor.description]
+            headers = [desc[0].strip() for desc in cursor.description]
+            columns = {header: [] for header in headers}
 
-            # Initialize lists for each column
-            for header in headers:
-                columns[header] = []
-
-            # Fetch the data row-by-row
             async for row in cursor:
                 for header, value in zip(headers, row):
                     columns[header].append(value)
-
+    except Exception as e:
+        logging.error(f"Error loading data from RDS: {e}")
+        raise
     finally:
         if connection:
-            await connection.ensure_closed()  # Close connection properly
-
+            await connection.ensure_closed()
     return columns
 
 
 @api_view(["POST"])
 def gdp_data(request):
     """
-    Return historical GDP data in response to a POST request.
-
-    Returns:
-    - response_data: A dictionary containing the dates and values of the GDP data.
+    Return historical GDP data.
     """
-    logging.info("GDP data requested")
-
-    data = async_to_sync(load_data)("gdp")
-
-    dates = [d for d in data.get("date", [])]
-    values = [float(v) for v in data.get("NGDPSAXDCCAQ", [])]
-
-    response_data = {
-        "labels": dates,
-        "values": values,
-        "label": "Millions of Domestic Currency, Seasonally Adjusted",
-        "x_label": "Date",
-        "y_label": "GDP (Millions of Domestic Currency, Seasonally Adjusted)",
-    }
-    return Response(response_data)
-
+    try:
+        data = async_to_sync(load_data)("gdp")
+        dates = [d for d in data.get("date", [])]
+        values = [float(v) for v in data.get("NGDPSAXDCCAQ", [])]
+        response_data = {
+            "labels": dates,
+            "values": values,
+            "label": "GDP (Millions of Domestic Currency, Seasonally Adjusted)",
+            "x_label": "Date",
+            "y_label": "GDP (Millions of Domestic Currency)",
+        }
+        return Response(response_data)
+    except Exception as e:
+        logging.error(f"Error fetching GDP data: {e}")
+        return Response({"error": str(e)}, status=500)
 
 @api_view(["POST"])
 def unemployment_data(request):
     """
-    Return unemployment rate data in response to a POST request.
-
-    Returns:
-    - response_data: A dictionary containing the province / territory names and
-      unemployment rates.
+    Return unemployment rate data.
     """
-    logging.info("Unemployment data requested")
-
-    data = async_to_sync(load_data)("unemployment_rate")
-
-    provinces = [d for d in data.get("\ufeffProvince and Territories", [])]
-    values = [float(v) for v in data.get("Unemployment Rates (%)", [])]
-
-    response_data = {
-        "labels": provinces,
-        "values": values,
-        "label": "Unemployment Rate (%)",
-        "x_axis_label": "Provinces / Territories",
-        "y_axis_label": "Unemployment Rate (%)",
-    }
-    return Response(response_data)
+    try:
+        data = async_to_sync(load_data)("unemployment_rate")
+        provinces = [d for d in data.get("\ufeffProvince and Territories", [])]
+        values = [float(v.strip()) for v in data.get("Unemployment Rates (%)", [])]
+    
+        
+        response_data = {
+            "labels": provinces,
+            "values": values,
+            "label": "Unemployment Rate (%)",
+            "x_axis_label": "Provinces / Territories",
+            "y_axis_label": "Unemployment Rate (%)",
+        }
+        return Response(response_data)
+    
+    except Exception as e:
+        logging.error(f"Error fetching unemployment data: {e}")
+        return Response({"error": f"Error fetching unemployment data: {str(e)}"}, status=500)
 
 
 @api_view(["POST"])

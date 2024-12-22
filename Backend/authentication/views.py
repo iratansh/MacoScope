@@ -20,6 +20,7 @@ from django.contrib.auth import get_user_model
 from django.utils.encoding import force_str 
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth import authenticate
+import logging
 
 def activate_email(request, user, to_email):
     try:
@@ -113,10 +114,11 @@ def activate(request, uidb64, token):
     else:
         messages.warning(request, 'The link is invalid.')
         return HttpResponse('Activation link is invalid!', status=400)
-        
-@csrf_protect
+
+@csrf_exempt        
 @api_view(['POST'])
 def login_user(request):
+    logging.info("Login API called")
     email = request.data.get('email')
     password = request.data.get('password')
     

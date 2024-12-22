@@ -68,7 +68,7 @@ async def load_data(indicator):
     columns = {}
     try:
         connection = await aiomysql.connect(
-            host="localhost",
+            host="macroscope-db.c928ywm8gz7k.us-east-1.rds.amazonaws.com",
             port=3306,
             user="mysqluser",
             password="secret1234",
