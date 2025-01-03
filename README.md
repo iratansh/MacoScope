@@ -10,6 +10,7 @@ MacroScope is a web application designed to track and analyze key economic indic
 - **Machine Learning:** LSTM model will built with TensorFlow.
 - **Data Visualization:** Chart.js for creating dynamic charts and graphs to visualize economic trends and predictions.
 - **Additional Technologies:** Node.js for auxiliary tasks and integrations.
+- **Deployment:** AWS (EC2, RDS, S3 + Cloudfront), Docker, Nginx, Gunicorn
 
 **Key Features:**
 - **Predictive Analytics:** Utilizes an LSTM machine learning model to deliver accurate forecasts and insights.
