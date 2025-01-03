@@ -15,7 +15,7 @@ MacroScope is a web application designed to track and analyze key economic indic
 - **Predictive Analytics:** Utilizes an LSTM machine learning model to deliver accurate forecasts and insights.
 - **User Authentication:** Secure login and registration system with email verification.
 - **Customizable Dashboard:** Interactive components for visualizing economic indicators and user-selected data.
-- **Real-Time Alerts:** Notification system for significant economic changes.
+- **Real-Time Alerts:** Notification system for user registration.
 
 **Datasets:**
 - Unemployment Rates:https://open.canada.ca/data/en/dataset/f212a64f-92f0-430c-a04f-06436b1239d2
