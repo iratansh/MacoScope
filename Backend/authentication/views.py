@@ -1,3 +1,7 @@
+"""
+This file contains the views for the authentication API
+"""
+
 from rest_framework import status
 from rest_framework.response import Response
 from django.contrib.auth.models import User
@@ -188,7 +192,7 @@ def send_password_reset_email(request):
             user = get_object_or_404(User, email=email)
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_link = f'http://localhost:5173/reset-password/{uid}/{token}/'
+            reset_link = f'https://www.mmacroscope.me/reset-password/{uid}/{token}/'
 
 
             email_message = EmailMessage(
@@ -278,7 +282,7 @@ def update_security(request):
 # Function to send a verification email
 def send_verification_email(request, user, to_email):
     mail_subject = 'Activate your user account'
-    domain = 'http://127.0.0.1:8080'
+    domain = 'https://www.mmacroscope.me'
     message = render_to_string('activation_email.html', {
         'user': user.username,
         'domain': domain,

@@ -7,7 +7,7 @@ MacroScope is a web application designed to track and analyze key economic indic
 
 - **Frontend:** Vue.js for building a responsive user interface with interactive data visualizations using Chart.js.
 - **Backend:** Django for managing the server-side logic, user authentication, and REST API endpoints, with MySQL for relational data storage.
-- **Machine Learning:** LSTM model will be built with TensorFlow.
+- **Machine Learning:** LSTM model will built with TensorFlow.
 - **Data Visualization:** Chart.js for creating dynamic charts and graphs to visualize economic trends and predictions.
 - **Additional Technologies:** Node.js for auxiliary tasks and integrations.
 
@@ -24,6 +24,7 @@ MacroScope is a web application designed to track and analyze key economic indic
 - Inflation Rates:'https://www.macrotrends.net/global-metrics/countries/CAN/canada/inflation-rate-cpi
 - Reserves:https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1010012701&cubeTimeFrame.startMonth=01&cubeTimeFrame.startYear=1951&cubeTimeFrame.endMonth=07&cubeTimeFrame.endYear=2024&referencePeriods=19510101%2C20240701
 
+**Demo Images**
+https://github.com/user-attachments/assets/89061c67-5aec-4d14-bdf8-df3eef8f2329
 <img width="1512" alt="image" src="https://github.com/user-attachments/assets/ba4e1cdd-5f16-4dcf-821c-cc054fc6b3fe">
 <img width="1512" alt="image" src="https://github.com/user-attachments/assets/51dae921-e479-4139-9176-74891d00d1d2">
-

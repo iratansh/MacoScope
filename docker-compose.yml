@@ -28,10 +28,10 @@ services:
 
   backend:
     build:
-      context: ./Backend  # Changed to Backend folder
+      context: ./Backend 
       dockerfile: Dockerfile
     volumes:
-      - ./Backend:/app  # Changed to Backend folder
+      - ./Backend:/app 
     ports:
       - "8080:8080"
     depends_on:
@@ -52,10 +52,10 @@ services:
 
   frontend:
     build:
-      context: ./Frontend  # Changed to Frontend folder
+      context: ./Frontend  
       dockerfile: Dockerfile
     volumes:
-      - ./Frontend:/app  # Changed to Frontend folder
+      - ./Frontend:/app  
       - ./static_data:/app/staticfiles
     ports:
       - "80:80"

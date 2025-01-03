@@ -112,7 +112,7 @@ export default {
       const payload = { email: this.email, password: this.password }
 
       axios
-        .post('http://127.0.0.1:8080/auth/login/', payload, { withCredentials: true })
+        .post('https://mmacroscope.me/auth/login/', payload, { withCredentials: true })
         .then((response) => {
           const { success, is_active, username, message } = response.data
 
@@ -161,7 +161,7 @@ export default {
 
     handleRegister() {
       const payload = { email: this.email, password: this.password }
-      fetch('http://127.0.0.1:8080/auth/register/', {
+      fetch('https://mmacroscope.me/auth/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

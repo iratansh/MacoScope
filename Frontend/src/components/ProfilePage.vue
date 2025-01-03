@@ -174,7 +174,7 @@ export default {
 
       axios
         .post(
-          'http://127.0.0.1:8080/auth/account-info/',
+          'https://mmacroscope.me/auth/account-info/',
           {},
           {
             withCredentials: true,
@@ -224,7 +224,7 @@ export default {
       }
 
       axios
-        .post('http://127.0.0.1:8080/auth/update-security/', payload)
+        .post('https://mmacroscope.me/auth/update-security/', payload)
         .then((response) => {
           if (response.data.success) {
             this.updateMessage =

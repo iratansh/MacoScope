@@ -127,7 +127,7 @@ export default {
       // Make a logout request to the backend
       axios
         .post(
-          'http://127.0.0.1:8080/auth/logout/',
+          'https://mmacroscope.me/auth/logout/',
           {}, // Empty request body
           {
             withCredentials: true, // Ensure cookies are sent

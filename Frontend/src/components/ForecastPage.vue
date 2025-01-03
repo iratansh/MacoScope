@@ -97,7 +97,7 @@ export default {
 
         // Fetch forecast data from Django API
         const response = await axios.get(
-          `http://127.0.0.1:8080/forecast/api/predict/${indicator.toLowerCase()}`
+          `https://mmacroscope.me/forecast/api/predict/${indicator.toLowerCase()}`
         )
 
         if (response.data && response.data.forecast) {

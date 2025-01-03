@@ -29,7 +29,7 @@
             <li>MySQL for data storage (authentication and economic data)</li>
             <li>TensorFlow for machine learning and predictive analytics</li>
             <li>Docker for containerization</li>
-            <li>AWS Lambda for hosting and scaling the application</li>
+            <li>AWS EC2, RDS, S3, Cloudfront for hosting and scaling the application</li>
           </ul>
         </section>
       </main>

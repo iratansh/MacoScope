@@ -76,7 +76,7 @@ export default {
       const csrfToken = Cookies.get('csrftoken')
 
       axios
-        .post('http://127.0.0.1:8080/auth/forgot-password/', payload, {
+        .post('https://mmacroscope.me/auth/forgot-password/', payload, {
           headers: {
             'X-CSRFToken': csrfToken 
           }

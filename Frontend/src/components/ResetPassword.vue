@@ -56,7 +56,7 @@ export default {
   methods: {
     resetPassword() {
       axios
-        .post(`http://127.0.0.1:8080/auth/reset-password/${this.uidb64}/${this.token}/`, {
+        .post(`https://mmacroscope.me/auth/reset-password/${this.uidb64}/${this.token}/`, {
           password: this.password
         })
         .then((response) => {

@@ -15,8 +15,8 @@ import os
 from django.conf import settings
 
 # AWS S3 Configuration
-AWS_ACCESS_KEY_ID = 'AKIA5V6I7L5MNHXUO5RJ'
-AWS_SECRET_ACCESS_KEY = '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'
+AWS_ACCESS_KEY_ID = ''
+AWS_SECRET_ACCESS_KEY = ''
 AWS_STORAGE_BUCKET_NAME = 'macroscope-static-files'
 AWS_S3_REGION_NAME = 'us-east-1'
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
@@ -39,14 +39,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-r6hldc5wream_pm)&59g1(a-2htos(b_g9dr(-*a1n2!u&zpc-"
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["mmacroscope.me", "www.mmacroscope.me", "d9ucc08qnmngb.cloudfront.net", "localhost"]
 
 # Application definition
 
@@ -86,10 +81,10 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.outlook.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "i.ratanshi12@outlook.com"
-EMAIL_HOST_PASSWORD = "swanshi1"
-DEFAULT_FROM_EMAIL = "i.ratanshi12@outlook.com"
-EMAIL_FROM = "i.ratanshi12@outlook.com"
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
+DEFAULT_FROM_EMAIL = ""
+EMAIL_FROM = ""
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -109,24 +104,45 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
+    "https://d9ucc08qnmngb.cloudfront.net",  
+    'https://mmacroscope.me',
+    'https://www.mmacroscope.me',
 ]
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8080", "http://127.0.0.1:8080"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "https://d9ucc08qnmngb.cloudfront.net", 
+    'https://mmacroscope.me',
+    'https://www.mmacroscope.me',
+]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "authorization",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_HTTPONLY = True
-CORS_ORIGIN_ALLOW_ALL = True  # Or specify allowed domains using CORS_ORIGIN_WHITELIST
 
 # CSRF settings
-CSRF_COOKIE_SECURE = False
-
+CSRF_COOKIE_SECURE = True
 ROOT_URLCONF = "Backend.urls"
 
 SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_SECURE = True  # Set to True in production
 
 
 TEMPLATES = [
@@ -159,7 +175,7 @@ DATABASES = {
         'NAME': 'authentication',
         'USER': 'mysqluser',
         'PASSWORD': 'secret1234',
-        'HOST': 'macroscope-db.c928ywm8gz7k.us-east-1.rds.amazonaws.com',
+        'HOST': 'macroscope-db.-------.us-east-1.rds.amazonaws.com',
         'PORT': '3306',
         
     },
@@ -168,7 +184,7 @@ DATABASES = {
         'NAME': 'forecast_db',
         'USER': 'mysqluser',
         'PASSWORD': 'secret1234',
-        'HOST': 'macroscope-db.c928ywm8gz7k.us-east-1.rds.amazonaws.com',
+        'HOST': 'macroscope-db.-------.us-east-1.rds.amazonaws.com',
         'PORT': '3306',
     }
 }
@@ -200,7 +216,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript)
+# Static files 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -212,8 +228,6 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 DATABASE_ROUTERS = ['Backend.routers.AuthenticationRouter', 'Backend.routers.ForecastRouter']
-
-# settings.py
 SESSION_COOKIE_NAME = 'authentication_sessionid'
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 1209600
@@ -222,8 +236,6 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_DB_ALIAS = 'authentication'
 
 LOGIN_URL = '/auth/login/'
-
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Twilio SendGrid Email Config
@@ -233,4 +245,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'apikey'
 EMAIL_HOST_PASSWORD = 'your-sendgrid-api-key'  
-DEFAULT_FROM_EMAIL = 'ishaanratanshi@gmail.com'
+DEFAULT_FROM_EMAIL = 'lPb0k@example.com'
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SECURE = True
+

@@ -2,10 +2,11 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from django.conf import settings
-import os
-from forecasts.models import EconomicIndicator
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
+import pandas as pd
+from django.db import connection
+import aiomysql
 
 def create_model(input_shape):
     """
@@ -38,12 +39,6 @@ def create_model(input_shape):
     model.compile(optimizer='adam', loss='mse')
     
     return model
-
-# forecasts/features.py
-import pandas as pd
-from forecasts.models import EconomicIndicator
-from django.db import connection
-import aiomysql
 
 async def load_data(indicator):
     """
@@ -113,12 +108,6 @@ async def load_data(indicator):
         values_column = df[numeric_columns[0]]
     
     return values_column.values.reshape(-1, 1)
-
-
-
-
-
-
 
 def preprocess_data(data):
     """

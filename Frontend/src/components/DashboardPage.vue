@@ -152,7 +152,7 @@ export default {
       }
     },
     async fetchChartData(indicator) {
-      const response = await axios.post(`http://127.0.0.1:8080/forecast/api/${indicator}/`, {
+      const response = await axios.post(`https://mmacroscope.me/forecast/api/${indicator}/`, {
         withCredentials: true
       })
 
@@ -405,7 +405,7 @@ export default {
     },
     checkAuthStatus() {
       axios
-        .get('http://127.0.0.1:8080/auth/check-auth/', { withCredentials: true })
+        .get('https://mmacroscope.me/auth/check-auth/', { withCredentials: true })
         .then((response) => {
           if (response.data.is_authenticated) {
             console.log('User is authenticated:', response.data.user)
